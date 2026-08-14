@@ -14,7 +14,9 @@ dependencies = [
     "matplotlib",
     "tqdm",
     "typer",
-    "pytest"
+    "seaborn",
+    "plotly",
+    "scikit",
 ]
 requires-python = ">=3.11"
 authors = [{name = "Derfel Terciano", email = "dtvsworld@gmail.com"}]
@@ -25,3 +27,6 @@ where = ["src/"]
 
 [project.scripts]
 ccellpaint =  "circadian_cell_painting.cli:app"
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-cov"]
