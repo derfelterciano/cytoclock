@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools >= 80.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "circadian-cell-painting"
+description = "Analyzes cell painting data but in circadian contexts"
+version = "0.1.0"
+dependencies = [
+    "polars",
+    "numpy",
+    "scipy",
+    "statsmodels",
+    "matplotlib",
+    "tqdm",
+    "typer"
+]
+requires-python = ">=3.11"
+authors = [{name = "Derfel Terciano", email = "dtvsworld@gmail.com"}]
+readme = "README.md"
+
+[tool.setuptools.packages.find]
+where = ["src/"]
+
+[project.scripts]
+ccellpaint =  "circadian_cell_painting.cli:app"
