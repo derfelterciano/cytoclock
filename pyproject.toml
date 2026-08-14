@@ -16,7 +16,7 @@ dependencies = [
     "typer",
     "seaborn",
     "plotly",
-    "scikit",
+    "scikit-learn",
 ]
 requires-python = ">=3.11"
 authors = [{name = "Derfel Terciano", email = "dtvsworld@gmail.com"}]
