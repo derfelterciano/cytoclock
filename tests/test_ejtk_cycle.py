@@ -6,50 +6,64 @@ from circadian_cell_painting.osc_detection import eJTK_CYCLE
 
 
 class TestComputeBestTau:
-    # -- output structure
-
-    def test_returns_5_tuple(
+    def test_returns_6_tuple(
         self, clean_cosine_24h, periods, ref_cosines_48, dist_params_48
     ):
         result = compute_best_tau(
             clean_cosine_24h, periods, ref_cosines_48, dist_params_48
         )
-        assert len(result) == 5
+        assert len(result) == 6
 
     def test_unpacks_correctly(
         self, clean_cosine_24h, periods, ref_cosines_48, dist_params_48
     ):
-        tau, p, period, lag, amp = compute_best_tau(
+        tau, raw_p, adj_p, period, lag, amp = compute_best_tau(
             clean_cosine_24h, periods, ref_cosines_48, dist_params_48
         )
         assert isinstance(tau, float)
-        assert isinstance(p, float)
+        assert isinstance(raw_p, float)
+        assert isinstance(adj_p, float)
         assert isinstance(period, (int, np.integer))
         assert isinstance(lag, float)
         assert isinstance(amp, float)
 
-    # -- val ranges
-
     def test_tau_in_0_1(
         self, clean_cosine_24h, periods, ref_cosines_48, dist_params_48
     ):
-        tau, _, _, _, _ = compute_best_tau(
+        tau, _, _, _, _, _ = compute_best_tau(
             clean_cosine_24h, periods, ref_cosines_48, dist_params_48
         )
         assert 0.0 <= tau <= 1.0
 
-    def test_pvalue_in_0_1(
+    def test_raw_pvalue_in_0_1(
         self, clean_cosine_24h, periods, ref_cosines_48, dist_params_48
     ):
-        _, p, _, _, _ = compute_best_tau(
+        _, raw_p, _, _, _, _ = compute_best_tau(
             clean_cosine_24h, periods, ref_cosines_48, dist_params_48
         )
-        assert 0.0 <= p <= 1.0
+        assert 0.0 <= raw_p <= 1.0
+
+    def test_adj_pvalue_in_0_1(
+        self, clean_cosine_24h, periods, ref_cosines_48, dist_params_48
+    ):
+        _, _, adj_p, _, _, _ = compute_best_tau(
+            clean_cosine_24h, periods, ref_cosines_48, dist_params_48
+        )
+        assert 0.0 <= adj_p <= 1.0
+
+    def test_adj_pvalue_gte_raw_pvalue(
+        self, clean_cosine_24h, periods, ref_cosines_48, dist_params_48
+    ):
+        """Bonferroni-adjusted p should always be >= raw p"""
+        _, raw_p, adj_p, _, _, _ = compute_best_tau(
+            clean_cosine_24h, periods, ref_cosines_48, dist_params_48
+        )
+        assert adj_p >= raw_p
 
     def test_period_in_tested_range(
         self, clean_cosine_24h, periods, ref_cosines_48, dist_params_48
     ):
-        _, _, period, _, _ = compute_best_tau(
+        _, _, _, period, _, _ = compute_best_tau(
             clean_cosine_24h, periods, ref_cosines_48, dist_params_48
         )
         assert period in periods
@@ -57,7 +71,7 @@ class TestComputeBestTau:
     def test_lag_within_period(
         self, clean_cosine_24h, periods, ref_cosines_48, dist_params_48
     ):
-        _, _, period, lag, _ = compute_best_tau(
+        _, _, _, period, lag, _ = compute_best_tau(
             clean_cosine_24h, periods, ref_cosines_48, dist_params_48
         )
         assert 0 <= lag < period
@@ -65,33 +79,33 @@ class TestComputeBestTau:
     def test_amplitude_nonnegative(
         self, clean_cosine_24h, periods, ref_cosines_48, dist_params_48
     ):
-        _, _, _, _, amp = compute_best_tau(
+        _, _, _, _, _, amp = compute_best_tau(
             clean_cosine_24h, periods, ref_cosines_48, dist_params_48
         )
         assert amp >= 0.0
 
-    # -- biological tests
-
     def test_clean_cosine_high_tau(
         self, clean_cosine_24h, periods, ref_cosines_48, dist_params_48
     ):
-        tau, _, _, _, _ = compute_best_tau(
+        tau, _, _, _, _, _ = compute_best_tau(
             clean_cosine_24h, periods, ref_cosines_48, dist_params_48
         )
-        assert tau > 0.5, f"Expected high tau for clean cosine, got {tau:.3f}"
+        assert tau > 0.5, f"Expected tau > 0.5 for clean cosine, got {tau:.3f}"
 
     def test_clean_cosine_low_pvalue(
         self, clean_cosine_24h, periods, ref_cosines_48, dist_params_48
     ):
-        _, p, _, _, _ = compute_best_tau(
+        _, _, adj_p, _, _, _ = compute_best_tau(
             clean_cosine_24h, periods, ref_cosines_48, dist_params_48
         )
-        assert p < 0.05, f"Expected significant p for clean cosine, got {p:.4f}"
+        assert (
+            adj_p < 0.05
+        ), f"Expected significant adj p for clean cosine, got {adj_p:.4f}"
 
     def test_clean_cosine_amplitude_positive(
         self, clean_cosine_24h, periods, ref_cosines_48, dist_params_48
     ):
-        _, _, _, _, amp = compute_best_tau(
+        _, _, _, _, _, amp = compute_best_tau(
             clean_cosine_24h, periods, ref_cosines_48, dist_params_48
         )
         assert amp > 0.0
@@ -99,8 +113,7 @@ class TestComputeBestTau:
     def test_flat_signal_zero_amplitude(
         self, flat_signal, periods, ref_cosines_48, dist_params_48
     ):
-        """A flat signal has no variation — amplitude should be ~0"""
-        _, _, _, _, amp = compute_best_tau(
+        _, _, _, _, _, amp = compute_best_tau(
             flat_signal, periods, ref_cosines_48, dist_params_48
         )
         assert amp == pytest.approx(0.0, abs=1e-6)
@@ -108,8 +121,7 @@ class TestComputeBestTau:
     def test_flat_signal_tau_zero(
         self, flat_signal, periods, ref_cosines_48, dist_params_48
     ):
-        """Flat signal has no rank variation — S should be 0, tau should be 0"""
-        tau, _, _, _, _ = compute_best_tau(
+        tau, _, _, _, _, _ = compute_best_tau(
             flat_signal, periods, ref_cosines_48, dist_params_48
         )
         assert tau == pytest.approx(0.0, abs=1e-6)
@@ -117,9 +129,8 @@ class TestComputeBestTau:
     def test_random_noise_lower_tau_than_clean(
         self, periods, ref_cosines_48, dist_params_48
     ):
-        """Random noise should have lower tau on average than a clean rhythm"""
         rng = np.random.default_rng(7)
-        clean_tau, _, _, _, _ = compute_best_tau(
+        clean_tau, _, _, _, _, _ = compute_best_tau(
             np.cos(2 * np.pi * np.arange(0, 96, 2) / 24),
             periods,
             ref_cosines_48,
@@ -128,32 +139,27 @@ class TestComputeBestTau:
         noise_taus = []
         for _ in range(10):
             noise = rng.normal(0, 1, 48)
-            tau, _, _, _, _ = compute_best_tau(
+            tau, _, _, _, _, _ = compute_best_tau(
                 noise, periods, ref_cosines_48, dist_params_48
             )
             noise_taus.append(tau)
         assert clean_tau > np.mean(noise_taus)
 
-    # -- phase recovery
-
     def test_phase_shifted_cosine_different_lag(
         self, periods, ref_cosines_48, dist_params_48
     ):
-        """Shifting phase of input cosine should change the recovered lag"""
         t = np.arange(0, 96, 2, dtype=float)
         cos_a = np.cos(2 * np.pi * t / 24)
-        cos_b = np.cos(2 * np.pi * t / 24 - np.pi / 2)  # quarter cycle shift
+        cos_b = np.cos(2 * np.pi * t / 24 - np.pi / 2)
 
-        _, _, _, lag_a, _ = compute_best_tau(
+        _, _, _, _, lag_a, _ = compute_best_tau(
             cos_a, periods, ref_cosines_48, dist_params_48
         )
-        _, _, _, lag_b, _ = compute_best_tau(
+        _, _, _, _, lag_b, _ = compute_best_tau(
             cos_b, periods, ref_cosines_48, dist_params_48
         )
 
         assert lag_a != lag_b, "Phase-shifted cosines should recover different lags"
-
-    # -- determinism
 
     def test_deterministic(
         self, clean_cosine_24h, periods, ref_cosines_48, dist_params_48
@@ -162,16 +168,13 @@ class TestComputeBestTau:
         r2 = compute_best_tau(clean_cosine_24h, periods, ref_cosines_48, dist_params_48)
         assert r1 == r2
 
-    # -- reversed signal
-
     def test_negated_signal_same_tau_magnitude(
         self, clean_cosine_24h, periods, ref_cosines_48, dist_params_48
     ):
-        """Negating the signal should give same |tau| (anti-phase still rhythmic)"""
-        tau_pos, _, _, _, _ = compute_best_tau(
+        tau_pos, _, _, _, _, _ = compute_best_tau(
             clean_cosine_24h, periods, ref_cosines_48, dist_params_48
         )
-        tau_neg, _, _, _, _ = compute_best_tau(
+        tau_neg, _, _, _, _, _ = compute_best_tau(
             -clean_cosine_24h, periods, ref_cosines_48, dist_params_48
         )
         assert tau_pos == pytest.approx(tau_neg, abs=1e-6)
@@ -183,7 +186,9 @@ class TestEjtkFitSingle:
 
     def test_returns_dict(self, model, clean_cosine_24h, periods, ref_and_dist):
         ref_cosines, dist_params = ref_and_dist
+        t = np.arange(48, dtype=float) * 2.0
         result = model._ejtk_fit_single(
+            timepoints=t,
             values=clean_cosine_24h,
             periods=periods,
             ref_cosines=ref_cosines,
@@ -196,7 +201,9 @@ class TestEjtkFitSingle:
 
     def test_required_keys(self, model, clean_cosine_24h, periods, ref_and_dist):
         ref_cosines, dist_params = ref_and_dist
+        t = np.arange(48, dtype=float) * 2.0
         result = model._ejtk_fit_single(
+            timepoints=t,
             values=clean_cosine_24h,
             periods=periods,
             ref_cosines=ref_cosines,
@@ -212,7 +219,9 @@ class TestEjtkFitSingle:
 
     def test_pvalue_in_0_1(self, model, clean_cosine_24h, periods, ref_and_dist):
         ref_cosines, dist_params = ref_and_dist
+        t = np.arange(48, dtype=float) * 2.0
         result = model._ejtk_fit_single(
+            timepoints=t,
             values=clean_cosine_24h,
             periods=periods,
             ref_cosines=ref_cosines,
@@ -225,7 +234,9 @@ class TestEjtkFitSingle:
 
     def test_tau_in_0_1(self, model, clean_cosine_24h, periods, ref_and_dist):
         ref_cosines, dist_params = ref_and_dist
+        t = np.arange(48, dtype=float) * 2.0
         result = model._ejtk_fit_single(
+            timepoints=t,
             values=clean_cosine_24h,
             periods=periods,
             ref_cosines=ref_cosines,
@@ -240,7 +251,9 @@ class TestEjtkFitSingle:
         self, model, clean_cosine_24h, periods, ref_and_dist
     ):
         ref_cosines, dist_params = ref_and_dist
+        t = np.arange(48, dtype=float) * 2.0
         result = model._ejtk_fit_single(
+            timepoints=t,
             values=clean_cosine_24h,
             periods=periods,
             ref_cosines=ref_cosines,
@@ -255,7 +268,9 @@ class TestEjtkFitSingle:
         self, model, clean_cosine_24h, periods, ref_and_dist
     ):
         ref_cosines, dist_params = ref_and_dist
+        t = np.arange(48, dtype=float) * 2.0
         result = model._ejtk_fit_single(
+            timepoints=t,
             values=clean_cosine_24h,
             periods=periods,
             ref_cosines=ref_cosines,
@@ -273,7 +288,9 @@ class TestEjtkFitSingle:
         """p_value should be floored at 1/n_perms, never exactly 0"""
         ref_cosines, dist_params = ref_and_dist
         n_perms = 20
+        t = np.arange(48, dtype=float) * 2.0
         result = model._ejtk_fit_single(
+            timepoints=t,
             values=clean_cosine_24h,
             periods=periods,
             ref_cosines=ref_cosines,
@@ -290,7 +307,9 @@ class TestEjtkFitSingle:
         self, model, clean_cosine_24h, periods, ref_and_dist
     ):
         ref_cosines, dist_params = ref_and_dist
+        t = np.arange(48, dtype=float) * 2.0
         result = model._ejtk_fit_single(
+            timepoints=t,
             values=clean_cosine_24h,
             periods=periods,
             ref_cosines=ref_cosines,
@@ -307,7 +326,9 @@ class TestEjtkFitSingle:
         self, model, random_signal, periods, ref_and_dist
     ):
         ref_cosines, dist_params = ref_and_dist
+        t = np.arange(48, dtype=float) * 2.0
         result = model._ejtk_fit_single(
+            timepoints=t,
             values=random_signal,
             periods=periods,
             ref_cosines=ref_cosines,
@@ -324,7 +345,9 @@ class TestEjtkFitSingle:
         self, model, clean_cosine_24h, periods, ref_and_dist
     ):
         ref_cosines, dist_params = ref_and_dist
+        t = np.arange(48, dtype=float) * 2.0
         result = model._ejtk_fit_single(
+            timepoints=t,
             values=clean_cosine_24h,
             periods=periods,
             ref_cosines=ref_cosines,
@@ -342,7 +365,9 @@ class TestEjtkFitSingle:
     def test_returns_none_on_bad_input(self, model, periods, ref_and_dist):
         """Should return None (not raise) on invalid input due to try/except"""
         ref_cosines, dist_params = ref_and_dist
+        t = np.arange(48, dtype=float) * 2.0
         result = model._ejtk_fit_single(
+            timepoints=t,
             values=None,  # invalid input
             periods=periods,
             ref_cosines=ref_cosines,
@@ -359,7 +384,9 @@ class TestEjtkFitSingle:
         self, model, clean_cosine_24h, periods, ref_and_dist
     ):
         ref_cosines, dist_params = ref_and_dist
+        t = np.arange(48, dtype=float) * 2.0
         r1 = model._ejtk_fit_single(
+            timepoints=t,
             values=clean_cosine_24h,
             periods=periods,
             ref_cosines=ref_cosines,
@@ -370,6 +397,7 @@ class TestEjtkFitSingle:
             rng_seed=42,
         )
         r2 = model._ejtk_fit_single(
+            timepoints=t,
             values=clean_cosine_24h,
             periods=periods,
             ref_cosines=ref_cosines,
@@ -387,7 +415,9 @@ class TestEjtkFitSingle:
     ):
         """tau/period should be identical regardless of rng_seed (observed stat, not permuted)"""
         ref_cosines, dist_params = ref_and_dist
+        t = np.arange(48, dtype=float) * 2.0
         r1 = model._ejtk_fit_single(
+            timepoints=t,
             values=clean_cosine_24h,
             periods=periods,
             ref_cosines=ref_cosines,
@@ -398,6 +428,7 @@ class TestEjtkFitSingle:
             rng_seed=1,
         )
         r2 = model._ejtk_fit_single(
+            timepoints=t,
             values=clean_cosine_24h,
             periods=periods,
             ref_cosines=ref_cosines,
