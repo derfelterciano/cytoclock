@@ -20,7 +20,7 @@ logging.basicConfig(
 
 
 app = typer.Typer(
-    name="Circadian Cell Painter Analyzer",
+    name="CytoClock, the Circadian Cell Painter Analyzer",
     help="This CLI runs the analysis needed for applying cell painting"
     "techniques onto circadian data",
     no_args_is_help=True,

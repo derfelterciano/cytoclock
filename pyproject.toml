@@ -3,7 +3,7 @@ requires = ["setuptools >= 80.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "circadian-cell-painting"
+name = "cytoclock"
 description = "Analyzes cell painting data but in circadian contexts"
 version = "0.1.0"
 dependencies = [
@@ -26,7 +26,7 @@ readme = "README.md"
 where = ["src/"]
 
 [project.scripts]
-ccellpaint =  "circadian_cell_painting.cli:app"
+cytoclock =  "cytoclock.cli:app"
 
 [project.optional-dependencies]
 dev = ["pytest", "pytest-cov"]

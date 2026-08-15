@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import pytest
 import numpy as np
-from circadian_cell_painting.osc_detection._ejtk_cycle_tools import compute_best_tau
-from circadian_cell_painting.osc_detection import eJTK_CYCLE
+from cytoclock.osc_detection._ejtk_cycle_tools import compute_best_tau
+from cytoclock.osc_detection import eJTK_CYCLE
 
 
 class TestComputeBestTau:

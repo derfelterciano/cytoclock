@@ -4,14 +4,14 @@ This is a config for all our tests
 """
 
 import pytest
-from circadian_cell_painting.osc_detection._ejtk_cycle_tools import (
+from cytoclock.osc_detection._ejtk_cycle_tools import (
     compute_best_tau,
     init_ref_cosines,
     _build_dist_params,
     hlm,
     _s_to_pvalue,
 )
-from circadian_cell_painting.osc_detection import eJTK_CYCLE
+from cytoclock.osc_detection import eJTK_CYCLE
 import numpy as np
 
 
