@@ -54,10 +54,10 @@ class JTKVisualize(VisualizerBase):
             color="crimson",
             linewidth=2,
             label=f"least-squares refit (from JKT's period)\n"
-            f"baseline={row["lsq_baseline"][0]:.2f}\n"
-            f"amp={row["lsq_amplitude"][0]:.2f}\n"
-            f"phase={row["lsq_phase_hours"][0]:.1f}h\n"
-            f"cycles={row["lsq_n_cycles"][0]:.2f}\n",
+            f"baseline={row['lsq_baseline'][0]:.2f}\n"
+            f"amp={row['lsq_amplitude'][0]:.2f}\n"
+            f"phase={row['lsq_phase_hours'][0]:.1f}h\n"
+            f"cycles={row['lsq_n_cycles'][0]:.2f}\n",
             zorder=9,
         )
 
