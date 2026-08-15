@@ -111,7 +111,6 @@ A signed network formulation was used rather than unsigned, since for circadian 
 
 ## Future directions and implementations
 
-- Implement JTK_CYCLE into python package
 - Preprocess data for unidentifiable/irregular periods (such as 30 hour)
 
 # CURRENT OBJECTIVES (TODO)
