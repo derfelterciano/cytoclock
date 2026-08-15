@@ -131,7 +131,7 @@ def scale_free_fit_index(
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 
     valid = (hist > 0) & (bin_centers > 0)
-    if valid.sum() > 3:
+    if valid.sum() < 3:
         return 0.0, mean_k
 
     log_p = np.log10(hist[valid] / hist[valid].sum())

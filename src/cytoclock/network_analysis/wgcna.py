@@ -136,7 +136,7 @@ class WGCNAAnalyzer:
 
         # outer-join all wells on feature handles any well missing a feature
         stacked = transposed_frames[0]
-        for frame in stacked:
+        for frame in transposed_frames[1:]:
             stacked = stacked.join(frame, on="feature", how="full", coalesce=True)
 
         col_names_sorted = sorted(
@@ -289,7 +289,7 @@ class WGCNAAnalyzer:
         logging.info(f"[{assembled.group_key}] computing eigengenes + membership")
         membership_df = module_membership(matrix, feature_names, module_assignments)
         membership_df = membership_df.with_columns(
-            pl.list(assembled.group_key).alias("group_key")
+            pl.lit(assembled.group_key).alias("group_key")
         )
 
         # -- edge list
