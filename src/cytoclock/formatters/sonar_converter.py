@@ -32,7 +32,7 @@ def format_sonar(
     try:
         lf = pl.scan_parquet(temp_out)
 
-        out_path = Path(out_file.stem)
+        out_path = out_file.parent / out_file.stem
         clean_folder(dir=out_path)
 
         wells = lf.select(well_col).unique().collect()[well_col].to_list()
